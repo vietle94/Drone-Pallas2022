@@ -8,17 +8,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 import glob
 from matplotlib.gridspec import GridSpec
-import merge_sensor_data as merge_sensor_data
 import argparse
 
 
-class MainWindow(QtWidgets.QMainWindow, file_in):
+class MainWindow(QtWidgets.QMainWindow,):
     # send_fig = QtCore.pyqtSignal(str)
 
-    def __init__(self):
+    def __init__(self, file_in):
         super(MainWindow, self).__init__()
+        self.file_in = file_in
 
-        self.df = pd.read_csv(file_in)
+        self.df = pd.read_csv(self.file_in)
         self.df['datetime'] = pd.to_datetime(self.df['datetime'])
 
         self.main_widget = QtWidgets.QWidget(self)
@@ -80,7 +80,7 @@ class MainWindow(QtWidgets.QMainWindow, file_in):
         self.timer.start()
 
     def update_plot(self):
-        self.df = pd.read_csv(file_in)
+        self.df = pd.read_csv(self.file_in)
         self.df['datetime'] = pd.to_datetime(self.df['datetime'])
         # colors = ["b", "r", "g", "y", "k", "c"]
         for ax_ in [self.ax1, self.ax1_twin, self.ax2, self.ax2_twin]:
@@ -121,8 +121,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Description for arguments")
     parser.add_argument("file_in", help="Input file", type=str)
     argument = parser.parse_args()
-
-    print('Finished merging files')
     app = QtWidgets.QApplication(sys.argv)
     win = MainWindow(argument.file_in)
     sys.exit(app.exec_())
