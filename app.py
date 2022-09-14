@@ -109,11 +109,11 @@ class MainWindow(QtWidgets.QMainWindow,):
         self.ax2.set_ylabel(self.var1)
         self.ax2_twin.set_ylabel(self.var2)
 
-        self.ax1.plot(self.df[self.var1], self.df[self.vary], c='blue')
+        self.ax1.plot(self.df[self.var1], self.df[self.vary], '.', c='blue')
         self.ax1.xaxis.label.set_color('blue')
         self.ax1.tick_params(axis='x', colors='blue')
 
-        self.ax1_twin.plot(self.df[self.var2], self.df[self.vary], c='red')
+        self.ax1_twin.plot(self.df[self.var2], self.df[self.vary], '.', c='red')
         self.ax1_twin.xaxis.label.set_color('red')
         self.ax1_twin.tick_params(axis='x', colors='red')
 
