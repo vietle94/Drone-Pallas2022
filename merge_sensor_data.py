@@ -24,9 +24,9 @@ def merge_sensor_data(dir_in, dir_out):
     data = {}
     for instrument, grp in file_summary.groupby('instrument_name'):
         data[instrument] = pd.concat([pd.read_csv(
-            x, index_col=False,
+            x, index_col=False, engine='python',
             sep=pd.read_csv(
-                x, sep=None, iterator=True, nrows=2)._engine.data.dialect.delimiter)
+                x, sep=None, iterator=True, nrows=2, engine='python')._engine.data.dialect.delimiter)
             for x in grp.file_path], ignore_index=True)
 
     for key, val in data.items():
@@ -52,9 +52,9 @@ def merge_sensor_data(dir_in, dir_out):
     data_merged = data_merged.set_index('datetime')
     data_merged = data_merged.sort_index()
     data_merged.reset_index(inplace=True)
-    data_merged.to_csv(dir_out + 'latest_merged.csv',
+    data_merged.to_csv(dir_out + dir_in.split('/')[-3] + '_merged.csv',
                        index=False)
-    print('latest_merged.csv created')
+    print(dir_in.split('/')[-3] + '_merged.csv created')
 
 
 if __name__ == '__main__':
@@ -66,3 +66,4 @@ if __name__ == '__main__':
     merge_sensor_data(argument.dir_in, argument.dir_out)
 
     print('Finished merging files')
+    print('---------------------------------------')
