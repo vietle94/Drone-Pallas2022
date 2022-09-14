@@ -94,7 +94,10 @@ class MainWindow(QtWidgets.QMainWindow,):
     def update_plot(self):
         self.df = pd.read_csv(self.file_in)
         self.df['datetime'] = pd.to_datetime(self.df['datetime'])
-        # colors = ["b", "r", "g", "y", "k", "c"]
+        total_volume = self.df['FlowRate_OPC-BP5']/60
+        self.df['total_concentration_OPC-BP5'] = self.df.loc[:, opc_lab].sum(
+            axis=1, min_count=1) / (total_volume)
+
         for ax_ in [self.ax1, self.ax1_twin, self.ax2, self.ax2_twin]:
             ax_.clear()
             ax_.grid()
