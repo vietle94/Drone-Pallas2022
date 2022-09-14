@@ -10,6 +10,14 @@ import glob
 from matplotlib.gridspec import GridSpec
 import argparse
 
+opc_lab = ['b0_OPC-BP5',
+           'b1_OPC-BP5', 'b2_OPC-BP5', 'b3_OPC-BP5', 'b4_OPC-BP5', 'b5_OPC-BP5',
+           'b6_OPC-BP5', 'b7_OPC-BP5', 'b8_OPC-BP5', 'b9_OPC-BP5', 'b10_OPC-BP5',
+           'b11_OPC-BP5', 'b12_OPC-BP5', 'b13_OPC-BP5', 'b14_OPC-BP5',
+           'b15_OPC-BP5', 'b16_OPC-BP5', 'b17_OPC-BP5', 'b18_OPC-BP5',
+           'b19_OPC-BP5', 'b20_OPC-BP5', 'b21_OPC-BP5', 'b22_OPC-BP5',
+           'b23_OPC-BP5']
+
 
 class MainWindow(QtWidgets.QMainWindow,):
     # send_fig = QtCore.pyqtSignal(str)
@@ -20,6 +28,10 @@ class MainWindow(QtWidgets.QMainWindow,):
 
         self.df = pd.read_csv(self.file_in)
         self.df['datetime'] = pd.to_datetime(self.df['datetime'])
+        total_volume = self.df['FlowRate_OPC-BP5']/60
+
+        self.df['total_concentration_OPC-BP5'] = self.df.loc[:, opc_lab].sum(
+            axis=1, min_count=1) / (total_volume)
 
         self.main_widget = QtWidgets.QWidget(self)
 
