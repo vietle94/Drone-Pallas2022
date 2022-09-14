@@ -7,8 +7,10 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import glob
+import os
 from matplotlib.gridspec import GridSpec
 import argparse
+from PyQt5.QtWidgets import QSlider
 
 opc_lab = ['b0_OPC-BP5',
            'b1_OPC-BP5', 'b2_OPC-BP5', 'b3_OPC-BP5', 'b4_OPC-BP5', 'b5_OPC-BP5',
@@ -22,11 +24,15 @@ opc_lab = ['b0_OPC-BP5',
 class MainWindow(QtWidgets.QMainWindow,):
     # send_fig = QtCore.pyqtSignal(str)
 
-    def __init__(self, file_in):
+    def __init__(self, path_in):
         super(MainWindow, self).__init__()
-        self.file_in = file_in
+        self.path_in = path_in
 
-        self.df = pd.read_csv(self.file_in)
+        # * means all if need specific format then *.csv
+        self.list_of_files = glob.glob(self.path_in + '/*.csv')
+        self.latest_file = max(self.list_of_files, key=os.path.getmtime)
+
+        self.df = pd.read_csv(self.latest_file)
         self.df['datetime'] = pd.to_datetime(self.df['datetime'])
         total_volume = self.df['FlowRate_OPC-BP5']/60
 
@@ -51,6 +57,11 @@ class MainWindow(QtWidgets.QMainWindow,):
                                   QtWidgets.QSizePolicy.Expanding)
         self.canvas.updateGeometry()
         self.df_colnames = self.df.select_dtypes(include=np.number).columns.tolist()
+
+        self.dropdownpath = QtWidgets.QComboBox()
+        self.dropdownpath.addItems(self.list_of_files)
+        self.dropdownpath.setCurrentText(self.latest_file)
+
         self.dropdownvar1 = QtWidgets.QComboBox()
         self.dropdownvar1.addItems(self.df_colnames)
         self.dropdownvar1.setCurrentIndex(
@@ -67,32 +78,58 @@ class MainWindow(QtWidgets.QMainWindow,):
             [i for i, xx in enumerate(self.df_colnames)
              if 'press' in xx][0])
 
+        self.slider = QSlider(QtCore.Qt.Horizontal)
+        self.slider.setMinimum(5000)
+        self.slider.setMaximum(25000)
+        self.slider.setValue(5000)
+        self.slider.setTickPosition(QSlider.TicksBelow)
+        self.slider.setTickInterval(5000)
+        self.slider.setSingleStep(5000)
+
         self.dropdownvar1.currentIndexChanged.connect(self.update)
         self.dropdownvar2.currentIndexChanged.connect(self.update)
         self.dropdownvary.currentIndexChanged.connect(self.update)
-        self.label = QtWidgets.QLabel("A plot:")
+        self.slider.valueChanged.connect(self.update_interval)
+
+        # self.label = QtWidgets.QLabel("A plot:")
 
         self.layout = QtWidgets.QGridLayout(self.main_widget)
-        self.layout.addWidget(QtWidgets.QLabel("Select category for var_1"))
-        self.layout.addWidget(self.dropdownvar1)
-        self.layout.addWidget(QtWidgets.QLabel("Select category for var_2"))
-        self.layout.addWidget(self.dropdownvar2)
-        self.layout.addWidget(QtWidgets.QLabel("Select category for var_y"))
-        self.layout.addWidget(self.dropdownvary)
+        self.layout.addWidget(QtWidgets.QLabel("Select file path"), 0, 0, 1, 2)
+        self.layout.addWidget(self.dropdownpath, 1, 0, 1, 2)
+        self.layout.addWidget(QtWidgets.QLabel("Select category for var_1"), 2, 0, 1, 1)
+        self.layout.addWidget(self.dropdownvar1, 3, 0, 1, 1)
+        self.layout.addWidget(QtWidgets.QLabel("Select category for var_2"), 2, 1, 1, 1)
+        self.layout.addWidget(self.dropdownvar2, 3, 1, 1, 1)
+        self.layout.addWidget(QtWidgets.QLabel("Select category for var_y"), 4, 0, 1, 1)
+        self.layout.addWidget(self.dropdownvary, 5, 0, 1, 1)
+        self.layout.addWidget(QtWidgets.QLabel("Update time (5000s to 25000s)"), 4, 1, 1, 1)
+        self.layout.addWidget(self.slider, 5, 1, 1, 1)
 
-        self.layout.addWidget(self.canvas)
+        self.layout.addWidget(self.canvas, 6, 0, 1, 2)
 
         self.setCentralWidget(self.main_widget)
         self.show()
         self.update()
+        self.update_interval()
 
+        # self.timer = QtCore.QTimer()
+        # self.timer.setInterval(5000)
+        # self.timer.timeout.connect(self.update_plot)
+        # self.timer.start()
+
+    def update_interval(self):
+        print('current update time is ', self.slider.value(), 's')
         self.timer = QtCore.QTimer()
-        self.timer.setInterval(5000)
+        self.timer.setInterval(self.slider.value())
         self.timer.timeout.connect(self.update_plot)
         self.timer.start()
 
     def update_plot(self):
-        self.df = pd.read_csv(self.file_in)
+        # * means all if need specific format then *.csv
+        self.list_of_files = glob.glob(self.path_in + '/*.csv')
+        self.latest_file = max(self.list_of_files, key=os.path.getmtime)
+        print(self.latest_file)
+        self.df = pd.read_csv(self.dropdownpath.currentText())
         self.df['datetime'] = pd.to_datetime(self.df['datetime'])
         total_volume = self.df['FlowRate_OPC-BP5']/60
         self.df['total_concentration_OPC-BP5'] = self.df.loc[:, opc_lab].sum(
@@ -134,10 +171,11 @@ class MainWindow(QtWidgets.QMainWindow,):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Description for arguments")
-    parser.add_argument("file_in", help="Input file", type=str)
+    parser.add_argument("path_in", help="Input file", type=str)
     argument = parser.parse_args()
     app = QtWidgets.QApplication(sys.argv)
-    win = MainWindow(argument.file_in)
+    win = MainWindow(argument.path_in)
     sys.exit(app.exec_())
 
 # https://www.pythonguis.com/tutorials/plotting-matplotlib/
+[(i, j) for i in range(5) for j in range(4)]
